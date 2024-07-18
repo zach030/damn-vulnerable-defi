@@ -75,7 +75,7 @@ interface ICryptoSwapPool {
         uint256 _new_adjustment_step,
         uint256 _new_ma_half_time
     ) external;
-    function exchange(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external payable returns (uint256);
+    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external payable returns (uint256);
     function exchange(uint256 i, uint256 j, uint256 dx, uint256 min_dy, bool use_eth)
         external
         payable

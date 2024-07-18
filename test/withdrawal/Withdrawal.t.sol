@@ -9,6 +9,7 @@ import {L2MessageStore} from "../../src/withdrawal/L2MessageStore.sol";
 import {L2Handler} from "../../src/withdrawal/L2Handler.sol";
 import {TokenBridge} from "../../src/withdrawal/TokenBridge.sol";
 import {DamnValuableToken} from "../../src/DamnValuableToken.sol";
+import {console2} from "forge-std/console2.sol";
 
 contract WithdrawalChallenge is Test {
     address deployer = makeAddr("deployer");
@@ -88,8 +89,31 @@ contract WithdrawalChallenge is Test {
     /**
      * CODE YOUR SOLUTION HERE
      */
+    struct Withdrawal {
+        bytes[] topics;
+        bytes data;
+    }
+    struct Message{
+        uint256 nonce;
+        address caller;
+        address target;
+        bytes data;
+    }
     function test_withdrawal() public checkSolvedByPlayer {
-        
+        // string memory json = vm.readFile("./test/withdrawal/withdrawals.json");
+        // bytes memory data = vm.parseJson(json);
+        // Withdrawal[] memory withdrawals = abi.decode(data, (Withdrawal[]));
+        // Message[] memory messages = new Message[](withdrawals.length);
+        // for (uint256 i = 0; i < withdrawals.length; i++) {
+        //     Withdrawal memory withdrawal = withdrawals[i];
+        //     Message memory message = Message({
+        //         nonce: abi.decode(withdrawal.topics[1], (uint256)),
+        //         caller: abi.decode(withdrawal.topics[2], (address)),
+        //         target: abi.decode(withdrawal.topics[3], (address)),
+        //         data: withdrawal.data
+        //     });
+        //     messages[i] = message;
+        // }
     }
 
     /**

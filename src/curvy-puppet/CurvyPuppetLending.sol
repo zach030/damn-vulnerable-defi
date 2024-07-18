@@ -9,7 +9,6 @@ import {FixedPointMathLib} from "solmate/utils/FixedPointMathLib.sol";
 import {IPermit2} from "permit2/interfaces/IPermit2.sol";
 import {IStableSwap} from "./IStableSwap.sol";
 import {CurvyPuppetOracle} from "./CurvyPuppetOracle.sol";
-import {console} from "forge-std/console.sol";
 
 contract CurvyPuppetLending is ReentrancyGuard {
     using FixedPointMathLib for uint256;

